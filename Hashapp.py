@@ -1,244 +1,85 @@
 import streamlit as st
 import hashlib
 import time
-import base64
-import os
 from supabase import create_client, Client
 
 # --- SETUP & CONFIG ---
-st.set_page_config(page_title="ABDI Network", page_icon="🪙", layout="centered")
+st.set_page_config(page_title="HamiZex Blockchain", page_icon="🪙", layout="wide")
 
-# --- IMAGE ENCODING FOR UI ---
-def get_image_base64(image_path):
-    if os.path.exists(image_path):
-        with open(image_path, "rb") as img_file:
-            return base64.b64encode(img_file.read()).decode()
-    return ""
-
-coin_b64 = get_image_base64("OIP_2.webp")
-
-# --- ELEGANT & IMMERSIVE CSS + JS ---
-page_bg_img = f"""
+# --- CSS UI DESIGN (Bitcoin & Trading Vibe) ---
+page_bg_img = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Playfair+Display:wght@700&family=Fira+Code:wght@400;500&display=swap');
-
-[data-testid="stAppViewContainer"] {{
-    background-color: #0a0a0a;
-    background-image: 
-        radial-gradient(circle at 50% 20%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
-        linear-gradient(rgba(10, 10, 10, 0.92), rgba(10, 10, 10, 0.96)),
-        url('data:image/webp;base64,{coin_b64}');
+/* Background Image of Bitcoin & Trading Charts */
+[data-testid="stAppViewContainer"] {
+    background-image: url("https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&q=80&w=2000");
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    color: #ededed;
-    font-family: 'Inter', sans-serif;
-    overflow-x: hidden;
-}}
+}
 
-/* Floating animated coin */
-.floating-coin {{
-    position: fixed;
-    top: 80px;
-    right: 60px;
-    width: 120px;
-    height: 120px;
-    z-index: 1000;
-    transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-    filter: drop-shadow(0 25px 35px rgba(212, 175, 55, 0.4));
-}}
+/* Make header transparent so it doesn't block the background */
+[data-testid="stHeader"] {
+    background: rgba(0,0,0,0);
+}
 
-.floating-coin:hover {{
-    transform: scale(1.15) rotate(12deg);
-}}
-
-/* Global glow effects */
-.glow-gold {{
-    text-shadow: 0 0 20px rgba(212, 175, 55, 0.6),
-                 0 0 40px rgba(212, 175, 55, 0.3);
-}}
-
-/* Hide header */
-[data-testid="stHeader"] {{
-    background: transparent;
-}}
-
-/* Elegant Typography */
-.main-title {{
-    font-family: 'Playfair Display', serif;
-    font-size: 3.4rem;
-    font-weight: 700;
-    letter-spacing: -1.5px;
-    background: linear-gradient(90deg, #ffffff, #d4af37, #ffffff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+/* Main Title Styling */
+.main-title {
+    color: #FFD700; /* Gold */
     text-align: center;
-    margin-bottom: 0.1rem;
-    animation: title-shimmer 6s linear infinite;
-}}
+    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.4);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 3.5em;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
 
-@keyframes title-shimmer {{
-    0% {{ background-position: 0% 50%; }}
-    100% {{ background-position: 200% 50%; }}
-}}
-
-.sub-title {{
-    font-family: 'Inter', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 300;
-    color: #a1a1aa;
+.sub-title {
+    color: #F0F0F0;
     text-align: center;
-    margin-bottom: 3.5rem;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-}}
+    margin-bottom: 40px;
+    font-size: 1.2em;
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.8);
+}
 
-/* Premium Glass Cards */
-.glass-card {{
-    background: rgba(255, 255, 255, 0.035);
-    border: 1px solid rgba(212, 175, 55, 0.15);
-    border-radius: 20px;
-    padding: 28px;
-    margin-bottom: 24px;
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-    position: relative;
-    overflow: hidden;
-}}
+/* Glassmorphism Block Cards with Gold Borders */
+.block-card {
+    background: rgba(18, 18, 22, 0.85);
+    border: 1px solid #FFD700;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 32px rgba(255, 215, 0, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #E0E0E0;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
 
-.glass-card::before {{
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 40%;
-    height: 40%;
-    background: radial-gradient(circle, rgba(212,175,55,0.2) 0%, transparent 70%);
-    opacity: 0;
-    transition: all 0.6s ease;
-}}
+.block-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(255, 215, 0, 0.3);
+}
 
-.glass-card:hover {{
-    transform: translateY(-8px);
-    border-color: #d4af37;
-    box-shadow: 0 25px 50px rgba(212, 175, 55, 0.15);
-}}
+.block-header {
+    color: #FFD700;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+    font-weight: bold;
+}
 
-.glass-card:hover::before {{
-    opacity: 1;
-    transform: translate(80%, 80%);
-}}
-
-/* Block header */
-.block-header {{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid rgba(212, 175, 55, 0.15);
-    padding-bottom: 16px;
-    margin-bottom: 20px;
-}}
-
-.block-id {{
-    font-size: 1.35rem;
-    font-weight: 600;
-    color: #d4af37;
-    letter-spacing: -0.5px;
-}}
-
-.block-time {{
-    font-size: 0.85rem;
-    color: #71717a;
-    font-family: 'Fira Code', monospace;
-}}
-
-/* Labels & Data */
-.data-label {{
-    font-size: 0.73rem;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: #888888;
-    margin-bottom: 6px;
-    display: block;
-}}
-
-.mono-text {{
-    font-family: 'Fira Code', monospace;
-    font-size: 0.9rem;
-    color: #d4d4d8;
-    line-height: 1.5;
-    word-break: break-all;
-}}
-
-/* Input Area */
-.stTextArea textarea {{
-    background-color: rgba(20, 20, 20, 0.7) !important;
-    border: 1px solid rgba(212, 175, 55, 0.2) !important;
-    color: #ededed !important;
-    font-family: 'Fira Code', monospace !important;
-    border-radius: 16px !important;
-    padding: 20px !important;
-    transition: all 0.3s ease;
-}}
-
-.stTextArea textarea:focus {{
-    border-color: #d4af37 !important;
-    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15) !important;
-}}
-
-/* Button */
-div.stButton > button {{
-    background: linear-gradient(90deg, #d4af37, #f0d48f);
-    color: #111111 !important;
-    font-weight: 600;
-    font-family: 'Inter', sans-serif;
-    border-radius: 50px;
-    border: none;
-    padding: 14px 42px;
-    font-size: 1.05rem;
-    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-    box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
-}}
-
-div.stButton > button:hover {{
-    transform: translateY(-3px) scale(1.03);
-    box-shadow: 0 20px 40px rgba(212, 175, 55, 0.4);
-    background: linear-gradient(90deg, #f0d48f, #d4af37);
-}}
-
-/* Subtle scanline / luxury effect */
-body::after {{
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: repeating-linear-gradient(
-        transparent 0px,
-        transparent 2px,
-        rgba(255,255,255,0.015) 2px,
-        rgba(255,255,255,0.015) 4px
-    );
-    pointer-events: none;
-    z-index: 9999;
-}}
+/* Hash Text Styling */
+.hash-text {
+    font-family: 'Courier New', Courier, monospace;
+    color: #00FFCC; /* Neon cyan for cryptographic hashes */
+    word-wrap: break-word;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
 </style>
-
-<script>
-document.addEventListener('mousemove', function(e) {{
-    const coin = document.getElementById('floating-coin');
-    if (coin) {{
-        const x = (e.clientX / window.innerWidth - 0.5) * 25;
-        const y = (e.clientY / window.innerHeight - 0.5) * 25;
-        coin.style.transform = `perspective(1000px) rotateY(${{x}}deg) rotateX(${{-y}}deg)`;
-    }}
-}});
-</script>
 """
-
 st.markdown(page_bg_img, unsafe_allow_html=True)
 
 # --- SUPABASE CONNECTION ---
@@ -250,7 +91,7 @@ def init_connection():
 
 supabase: Client = init_connection()
 
-# --- BLOCKCHAIN FUNCTIONS (unchanged) ---
+# --- BLOCKCHAIN FUNCTIONS ---
 def hash_block(index, previous_hash, timestamp, data, nonce):
     value = str(index) + str(previous_hash) + str(timestamp) + str(data) + str(nonce)
     return hashlib.sha256(value.encode('utf-8')).hexdigest()
@@ -258,15 +99,16 @@ def hash_block(index, previous_hash, timestamp, data, nonce):
 def sync_with_supabase():
     response = supabase.table("blocks").select("*").order("index").execute()
     if not response.data:
+        # Create Genesis Block if DB is empty
         genesis_block = {
             "index": 0,
             "previous_hash": "0",
             "timestamp": time.time(),
-            "data": "Network Genesis",
+            "data": "Genesis Block - Welcome to HamiZex",
             "nonce": 0
         }
         genesis_block["hash"] = hash_block(
-            genesis_block["index"], genesis_block["previous_hash"],
+            genesis_block["index"], genesis_block["previous_hash"], 
             genesis_block["timestamp"], genesis_block["data"], genesis_block["nonce"]
         )
         supabase.table("blocks").insert(genesis_block).execute()
@@ -276,28 +118,30 @@ def sync_with_supabase():
 def add_block(data):
     chain = sync_with_supabase()
     last_block = chain[-1]
-   
+    
     new_index = last_block["index"] + 1
     previous_hash = last_block["hash"]
     timestamp = time.time()
-   
+    
+    # Mining (Proof of Work Simulation)
     nonce = 0
-    difficulty = 4
+    difficulty = 4 # Requires 4 leading zeros
     target = "0" * difficulty
-   
+    
+    # UI Element to show mining progress
     mining_placeholder = st.empty()
-   
+    
     while True:
         new_hash = hash_block(new_index, previous_hash, timestamp, data, nonce)
-       
-        if nonce % 8000 == 0:
-            mining_placeholder.info(f"⛏️ Mining Block... Nonce: {nonce:,}")
-           
+        
+        if nonce % 10000 == 0: # Update UI occasionally to avoid freezing
+            mining_placeholder.info(f"⛏️ Mining... Trying nonce: {nonce} | Hash: {new_hash[:15]}...")
+            
         if new_hash.startswith(target):
-            mining_placeholder.success("✅ Block mined & verified successfully")
-            time.sleep(1.2)
+            mining_placeholder.success(f"💎 Block Mined Successfully! Nonce found: {nonce}")
             break
         nonce += 1
+
     new_block = {
         "index": new_index,
         "previous_hash": previous_hash,
@@ -306,70 +150,40 @@ def add_block(data):
         "nonce": nonce,
         "hash": new_hash
     }
-   
+    
+    # Save to Supabase
     supabase.table("blocks").insert(new_block).execute()
 
 # --- UI LAYOUT ---
-st.markdown('<div class="main-title glow-gold">ABDI COIN</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">Immutable • Elegant • Yours</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">🪙 HamiZex Blockchain</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">A Secure, Decentralized Ledger by Hamidreza ($HZX)</div>', unsafe_allow_html=True)
 
-# Floating Interactive Coin
-st.markdown(f"""
-<div id="floating-coin" class="floating-coin">
-    <img src="data:image/webp;base64,{coin_b64}" width="120" height="120" style="border-radius: 50%; border: 3px solid #d4af37;">
-</div>
-""", unsafe_allow_html=True)
-
-# Transaction Entry
+# Transaction Input Form
+st.markdown("### 📝 Initiate Transaction")
 with st.container():
-    st.markdown('<span class="data-label">NEW TRANSACTION PAYLOAD</span>', unsafe_allow_html=True)
-    data_input = st.text_area(
-        "Payload", 
-        height=130, 
-        label_visibility="collapsed", 
-        placeholder="Describe your transfer, smart contract, or message..."
-    )
-   
-    if st.button("Sign & Mine Block", use_container_width=True):
-        if data_input.strip():
-            add_block(data_input.strip())
-            st.rerun()
+    data_input = st.text_area("Enter transaction details or smart contract message:", height=100)
+    if st.button("Cryptographically Sign & Mine ⛏️", use_container_width=True):
+        if data_input:
+            add_block(data_input)
+            st.rerun() # Refresh the app to show the new block
         else:
-            st.warning("Please enter a payload before mining.")
+            st.warning("⚠️ Transaction data cannot be empty.")
 
-st.markdown("<br>", unsafe_allow_html=True)
-st.markdown('<span class="data-label" style="font-size: 1rem; text-align:center; display:block;">LIVE NETWORK LEDGER</span>', unsafe_allow_html=True)
+st.divider()
 
-# Ledger Rendering
+# Display the Blockchain
+st.markdown("### ⛓️ Live Public Ledger")
 blockchain_data = sync_with_supabase()
+
 for block in reversed(blockchain_data):
-    timestamp_str = time.strftime('%b %d, %Y • %H:%M:%S', time.localtime(block['timestamp']))
     st.markdown(f"""
-    <div class="glass-card">
-        <div class="block-header">
-            <span class="block-id">BLOCK {block['index']}</span>
-            <span class="block-time">{timestamp_str}</span>
-        </div>
-       
-        <div style="margin-bottom: 20px;">
-            <span class="data-label">PAYLOAD</span>
-            <span class="mono-text" style="color: #ffffff; font-size: 1rem;">{block['data']}</span>
-        </div>
-       
-        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 32px; margin-bottom: 20px;">
-            <div>
-                <span class="data-label">NONCE</span>
-                <span class="mono-text" style="font-size: 1.1rem;">{block.get('nonce', 0):,}</span>
-            </div>
-            <div>
-                <span class="data-label">PREVIOUS HASH</span>
-                <span class="mono-text" style="font-size: 0.85rem;">{block['previous_hash']}</span>
-            </div>
-        </div>
-       
-        <div>
-            <span class="data-label">BLOCK HASH</span>
-            <span class="mono-text" style="color: #d4af37; font-size: 0.85rem; word-break: break-all;">{block['hash']}</span>
-        </div>
+    <div class="block-card">
+        <div class="block-header">Block #{block['index']}</div>
+        <b>Timestamp:</b> {time.ctime(block['timestamp'])}<br><br>
+        <b>Transaction Data:</b><br>
+        <i>{block['data']}</i><br><br>
+        <b>Nonce:</b> <span class="hash-text">{block.get('nonce', 0)}</span><br>
+        <b>Previous Hash:</b> <br><span class="hash-text">{block['previous_hash']}</span><br>
+        <b>Block Hash:</b> <br><span class="hash-text">{block['hash']}</span>
     </div>
     """, unsafe_allow_html=True)
