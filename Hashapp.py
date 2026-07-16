@@ -6,31 +6,33 @@ import os
 from supabase import create_client, Client
 
 # --- SETUP & CONFIG ---
-st.set_page_config(page_title="HamiZex Blockchain", page_icon="🪙", layout="wide")
+st.set_page_config(page_title="ABDI Coin Network", page_icon="🪙", layout="wide")
 
 # --- IMAGE ENCODING FOR UI ---
-# Dynamically load the requested local image to bypass Streamlit static folder limits
 def get_image_base64(image_path):
     if os.path.exists(image_path):
         with open(image_path, "rb") as img_file:
             return base64.b64encode(img_file.read()).decode()
     return ""
 
-# Reference the file verbatim as requested
-coin_b64 = get_image_base64("OIP.webp")
+# Read the local image file verbatim
+coin_b64 = get_image_base64("OIP_2.webp")
 
-# --- PREMIUM CSS UI DESIGN (Sleek, High-End Dark Mode) ---
+# --- PREMIUM CSS UI DESIGN ---
 page_bg_img = f"""
 <style>
 /* Import premium minimalist fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
 
-/* High-End Dark Background */
+/* High-End Dark Background with Image Overlay */
 [data-testid="stAppViewContainer"] {{
     background-color: #09090b;
     background-image: 
-        radial-gradient(circle at 10% 20%, rgba(0, 191, 255, 0.03), transparent 30%),
-        radial-gradient(circle at 90% 80%, rgba(212, 175, 55, 0.04), transparent 30%);
+        linear-gradient(rgba(9, 9, 11, 0.85), rgba(9, 9, 11, 0.95)),
+        url('data:image/webp;base64,{coin_b64}');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
     color: #e4e4e7;
     font-family: 'Inter', sans-serif;
 }}
@@ -40,16 +42,16 @@ page_bg_img = f"""
     background: rgba(0,0,0,0);
 }}
 
-/* 3D Floating Interactive Image (OIP.webp) */
+/* 3D Floating Interactive Image */
 .coin-wrapper {{
     position: fixed;
     top: 40px;
     right: 50px;
-    width: 130px;
-    height: 130px;
+    width: 140px;
+    height: 140px;
     z-index: 999;
     perspective: 1200px;
-    animation: floatCoin 5s ease-in-out infinite;
+    animation: floatCoin 4s ease-in-out infinite;
 }}
 
 .coin-3d {{
@@ -61,23 +63,22 @@ page_bg_img = f"""
     background-size: cover;
     background-position: center;
     box-shadow: 
-        0 10px 30px rgba(0, 0, 0, 0.8),
-        0 0 20px rgba(0, 191, 255, 0.15),
-        inset 0 0 15px rgba(212, 175, 55, 0.2);
+        0 10px 30px rgba(0, 0, 0, 0.9),
+        0 0 25px rgba(212, 175, 55, 0.2),
+        inset 0 0 20px rgba(255, 255, 255, 0.1);
     /* Continuous slow rotation */
-    animation: spinCoin 12s linear infinite;
+    animation: spinCoin 15s linear infinite;
     cursor: pointer;
-    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }}
 
-/* Interactive reaction on hover - Speeds up, glows cyan/gold */
+/* Interactive reaction on hover - Speeds up, glows gold */
 .coin-3d:hover {{
     animation: spinCoin 2s linear infinite;
     box-shadow: 
-        0 0 40px rgba(0, 191, 255, 0.4), 
-        0 0 20px rgba(212, 175, 55, 0.4),
-        inset 0 0 20px rgba(255, 255, 255, 0.1);
-    transform: scale(1.08);
+        0 0 50px rgba(212, 175, 55, 0.6), 
+        inset 0 0 30px rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
 }}
 
 @keyframes spinCoin {{
@@ -87,7 +88,7 @@ page_bg_img = f"""
 
 @keyframes floatCoin {{
     0%, 100% {{ transform: translateY(0px); }}
-    50% {{ transform: translateY(-15px); }}
+    50% {{ transform: translateY(-12px); }}
 }}
 
 /* Typography */
@@ -95,53 +96,59 @@ page_bg_img = f"""
     color: #ffffff;
     text-align: center;
     font-family: 'Inter', sans-serif;
-    font-size: 3.5em;
+    font-size: 4em;
     font-weight: 800;
     letter-spacing: -1px;
     margin-bottom: 5px;
-    background: linear-gradient(90deg, #ffffff, #a1a1aa);
+    background: linear-gradient(90deg, #d4af37, #ffffff, #d4af37);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    animation: shimmer 3s infinite linear;
+    background-size: 200% auto;
+}}
+
+@keyframes shimmer {{
+    to {{ background-position: 200% center; }}
 }}
 
 .sub-title {{
-    color: #71717a;
+    color: #a1a1aa;
     text-align: center;
     margin-bottom: 50px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.9em;
-    letter-spacing: 0.5px;
+    font-size: 1em;
+    letter-spacing: 1px;
     text-transform: uppercase;
 }}
 
 /* Sleek Block Cards */
 .block-card {{
-    background: rgba(24, 24, 27, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    padding: 24px;
+    background: rgba(24, 24, 27, 0.5);
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    border-radius: 16px;
+    padding: 28px;
     margin-bottom: 24px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     transition: all 0.3s ease;
 }}
 
 /* Subtle lifting hover effect */
 .block-card:hover {{
-    transform: translateY(-4px);
-    border: 1px solid rgba(212, 175, 55, 0.3);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 191, 255, 0.05);
+    transform: translateY(-6px);
+    border: 1px solid rgba(212, 175, 55, 0.5);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(212, 175, 55, 0.1);
 }}
 
 .block-header {{
-    color: #e4e4e7;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #d4af37;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
     padding-bottom: 12px;
     margin-bottom: 16px;
     font-family: 'Inter', sans-serif;
-    font-size: 1.2em;
-    font-weight: 600;
+    font-size: 1.3em;
+    font-weight: 800;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -150,13 +157,13 @@ page_bg_img = f"""
 /* Hash Text Styling */
 .hash-text {{
     font-family: 'JetBrains Mono', monospace;
-    color: #38bdf8;
+    color: #fde047;
     word-wrap: break-word;
     font-size: 0.85em;
-    background: rgba(0, 0, 0, 0.4);
-    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 6px 12px;
     border-radius: 6px;
-    border-left: 2px solid #38bdf8;
+    border-left: 3px solid #d4af37;
     display: inline-block;
     margin-top: 4px;
     letter-spacing: 0.5px;
@@ -164,36 +171,36 @@ page_bg_img = f"""
 
 /* Streamlit Native Element Overrides */
 div.stButton > button {{
-    background: #ffffff;
+    background: linear-gradient(135deg, #d4af37, #b8860b);
     color: #09090b !important;
     font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    font-size: 1em;
+    font-weight: 800;
+    font-size: 1.1em;
     border: none;
     border-radius: 8px;
     padding: 12px 24px;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 14px rgba(255, 255, 255, 0.15);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
 }}
 
 div.stButton > button:hover {{
-    background: #e4e4e7;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25);
+    background: linear-gradient(135deg, #fde047, #d4af37);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5);
 }}
 
 .stTextArea textarea {{
-    background-color: rgba(24, 24, 27, 0.8) !important;
-    color: #e4e4e7 !important;
+    background-color: rgba(9, 9, 11, 0.7) !important;
+    color: #fde047 !important;
     font-family: 'JetBrains Mono', monospace !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(212, 175, 55, 0.2) !important;
     border-radius: 8px !important;
     padding: 12px !important;
 }}
 
 .stTextArea textarea:focus {{
-    border: 1px solid #38bdf8 !important;
-    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2) !important;
+    border: 1px solid #d4af37 !important;
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.3) !important;
 }}
 </style>
 
@@ -221,12 +228,11 @@ def hash_block(index, previous_hash, timestamp, data, nonce):
 def sync_with_supabase():
     response = supabase.table("blocks").select("*").order("index").execute()
     if not response.data:
-        # Create Genesis Block if DB is empty
         genesis_block = {
             "index": 0,
             "previous_hash": "0",
             "timestamp": time.time(),
-            "data": "Genesis Block - Network Initialized",
+            "data": "Genesis Block - ABDI Coin Mainnet Initialized",
             "nonce": 0
         }
         genesis_block["hash"] = hash_block(
@@ -245,22 +251,20 @@ def add_block(data):
     previous_hash = last_block["hash"]
     timestamp = time.time()
     
-    # Mining (Proof of Work Simulation)
     nonce = 0
-    difficulty = 4 # Requires 4 leading zeros
+    difficulty = 4 
     target = "0" * difficulty
     
-    # Minimalist mining progress UI
     mining_placeholder = st.empty()
     
     while True:
         new_hash = hash_block(new_index, previous_hash, timestamp, data, nonce)
         
         if nonce % 10000 == 0:
-            mining_placeholder.info(f"⚙️ Computing Hash... Nonce: `{nonce}` | Current: `{new_hash[:12]}...`")
+            mining_placeholder.info(f"⚙️ Mining ABDI Block... Nonce: `{nonce}` | Current: `{new_hash[:12]}...`")
             
         if new_hash.startswith(target):
-            mining_placeholder.success(f"✓ Block Validated. Nonce: `{nonce}`")
+            mining_placeholder.success(f"✓ ABDI Block Verified. Nonce: `{nonce}`")
             break
         nonce += 1
 
@@ -273,28 +277,27 @@ def add_block(data):
         "hash": new_hash
     }
     
-    # Save to Supabase
     supabase.table("blocks").insert(new_block).execute()
 
 # --- UI LAYOUT ---
-st.markdown('<div class="main-title">HamiZex Core</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">Decentralized Cryptographic Ledger Protocol v1.0</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">ABDI COIN</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">Next-Generation Decentralized Ledger Protocol ($ABDI)</div>', unsafe_allow_html=True)
 
 # Transaction Input Form
-st.markdown("<h4 style='color: #e4e4e7; font-weight: 600; margin-bottom: 1rem;'>Deploy Transaction</h4>", unsafe_allow_html=True)
+st.markdown("<h4 style='color: #e4e4e7; font-weight: 600; margin-bottom: 1rem;'>Inject Transaction</h4>", unsafe_allow_html=True)
 with st.container():
-    data_input = st.text_area("Enter payload data or contract logic:", height=100, placeholder="{ \"type\": \"transfer\", \"amount\": 0 }")
-    if st.button("Sign & Execute Protocol", use_container_width=True):
+    data_input = st.text_area("Enter ABDI Smart Contract or Payload:", height=100, placeholder="Execute transfer: 500 $ABDI to Wallet 0x...")
+    if st.button("Sign & Mine Block ⛏️", use_container_width=True):
         if data_input:
             add_block(data_input)
             st.rerun() 
         else:
             st.warning("⚠️ Payload cannot be empty.")
 
-st.markdown("<br><hr style='border: 0; height: 1px; background: rgba(255, 255, 255, 0.05); margin: 2rem 0;'><br>", unsafe_allow_html=True)
+st.markdown("<br><hr style='border: 0; height: 1px; background: rgba(212, 175, 55, 0.2); margin: 2rem 0;'><br>", unsafe_allow_html=True)
 
 # Display the Blockchain
-st.markdown("<h4 style='color: #e4e4e7; font-weight: 600; margin-bottom: 1rem;'>Network Ledger</h4>", unsafe_allow_html=True)
+st.markdown("<h4 style='color: #e4e4e7; font-weight: 600; margin-bottom: 1rem;'>ABDI Mainnet Ledger</h4>", unsafe_allow_html=True)
 blockchain_data = sync_with_supabase()
 
 for block in reversed(blockchain_data):
@@ -302,17 +305,17 @@ for block in reversed(blockchain_data):
     <div class="block-card">
         <div class="block-header">
             <span>Block #{block['index']}</span>
-            <span style="font-size: 0.8em; color: #a1a1aa; font-family: 'JetBrains Mono', monospace;">{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(block['timestamp']))}</span>
+            <span style="font-size: 0.8em; color: #a1a1aa; font-family: 'JetBrains Mono', monospace; font-weight: 400;">{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(block['timestamp']))}</span>
         </div>
         <div style="margin-bottom: 16px;">
             <span style="color: #a1a1aa; font-size: 0.9em; text-transform: uppercase; font-weight: 600;">Payload Data</span><br>
-            <span style="color: #f4f4f5; font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px; display: inline-block; width: 100%; margin-top: 4px;">{block['data']}</span>
+            <span style="color: #ffffff; font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 6px; display: inline-block; width: 100%; margin-top: 6px;">{block['data']}</span>
         </div>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 16px;">
             <div>
                 <span style="color: #a1a1aa; font-size: 0.8em; text-transform: uppercase; font-weight: 600;">Nonce</span><br>
-                <span class="hash-text" style="border-left: 2px solid #a1a1aa; color: #e4e4e7;">{block.get('nonce', 0)}</span>
+                <span class="hash-text" style="color: #ffffff;">{block.get('nonce', 0)}</span>
             </div>
             <div>
                 <span style="color: #a1a1aa; font-size: 0.8em; text-transform: uppercase; font-weight: 600;">Previous Hash</span><br>
@@ -322,7 +325,7 @@ for block in reversed(blockchain_data):
         
         <div>
             <span style="color: #a1a1aa; font-size: 0.8em; text-transform: uppercase; font-weight: 600;">Block Hash</span><br>
-            <span class="hash-text" style="border-left: 2px solid #d4af37; color: #d4af37; font-weight: bold; width: 100%; box-sizing: border-box;">{block['hash']}</span>
+            <span class="hash-text" style="border-left: 3px solid #d4af37; color: #d4af37; font-weight: bold; width: 100%; box-sizing: border-box;">{block['hash']}</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
