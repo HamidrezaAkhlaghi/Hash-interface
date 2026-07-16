@@ -3,164 +3,189 @@ import hashlib
 import time
 from supabase import create_client, Client
 
-# --- Page Config ---
+# --- SETUP & CONFIG ---
 st.set_page_config(page_title="HamiZex Blockchain", page_icon="🪙", layout="wide")
 
-# --- Custom CSS for Sexy UI & Rotating Coin ---
-st.markdown("""
+# --- CSS UI DESIGN (Bitcoin & Trading Vibe) ---
+page_bg_img = """
 <style>
-    /* Dark gradient background */
-    .stApp {
-        background: linear-gradient(135deg, #131417, #1e2128, #2a2d35);
-        color: white;
-    }
-    
-    /* Neon headers */
-    h1, h2, h3 {
-        color: #00ffcc !important; /* Cyberpunk Cyan */
-        text-shadow: 0px 0px 15px rgba(0, 255, 204, 0.4);
-    }
+/* Background Image of Bitcoin & Trading Charts */
+[data-testid="stAppViewContainer"] {
+    background-image: url("https://images.unsplash.com/photo-1621416894569-0f39ed31d247?auto=format&fit=crop&q=80&w=2000");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
 
-    /* Styled metric boxes */
-    div[data-testid="stMetricValue"] {
-        color: #f7931a !important; /* Bitcoin Orange accent */
-    }
-    
-    /* Rotating Coin Animation */
-    .rotating-coin {
-        width: 120px;
-        height: 120px;
-        background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/46/Bitcoin.svg');
-        background-size: cover;
-        margin: 0 auto;
-        animation: spin 5s linear infinite;
-        transition: transform 0.4s ease-out;
-        filter: drop-shadow(0 0 15px rgba(247, 147, 26, 0.5));
-    }
-    
-    /* Speed up spin on hover (Mouse interaction) */
-    .rotating-coin:hover {
-        animation: spin 0.4s linear infinite;
-        transform: scale(1.3);
-        filter: drop-shadow(0 0 25px rgba(247, 147, 26, 0.9));
-        cursor: pointer;
-    }
+/* Make header transparent so it doesn't block the background */
+[data-testid="stHeader"] {
+    background: rgba(0,0,0,0);
+}
 
-    @keyframes spin { 
-        100% { -webkit-transform: rotateY(360deg); transform: rotateY(360deg); } 
-    }
-    
-    /* Style the block cards */
-    .block-card {
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 15px;
-        border-left: 4px solid #00ffcc;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        backdrop-filter: blur(10px);
-        border-top: 1px solid rgba(255,255,255,0.1);
-        transition: transform 0.2s;
-    }
-    
-    .block-card:hover {
-        transform: translateX(10px);
-        background: rgba(255, 255, 255, 0.06);
-    }
+/* Main Title Styling */
+.main-title {
+    color: #FFD700; /* Gold */
+    text-align: center;
+    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.4);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 3.5em;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+
+.sub-title {
+    color: #F0F0F0;
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 1.2em;
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.8);
+}
+
+/* Glassmorphism Block Cards with Gold Borders */
+.block-card {
+    background: rgba(18, 18, 22, 0.85);
+    border: 1px solid #FFD700;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 32px rgba(255, 215, 0, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #E0E0E0;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.block-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(255, 215, 0, 0.3);
+}
+
+.block-header {
+    color: #FFD700;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+/* Hash Text Styling */
+.hash-text {
+    font-family: 'Courier New', Courier, monospace;
+    color: #00FFCC; /* Neon cyan for cryptographic hashes */
+    word-wrap: break-word;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
 </style>
-""", unsafe_allow_html=True)
+"""
+st.markdown(page_bg_img, unsafe_allow_html=True)
 
-# --- Supabase Setup ---
-SUPABASE_URL = st.secrets["SUPABASE_URL"]
-SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# --- SUPABASE CONNECTION ---
+@st.cache_resource
+def init_connection():
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
+    return create_client(url, key)
 
-# --- Fetch Blocks ---
-def get_blocks():
-    response = supabase.table("blocks").select("*").order("index", desc=False).execute()
+supabase: Client = init_connection()
+
+# --- BLOCKCHAIN FUNCTIONS ---
+def hash_block(index, previous_hash, timestamp, data, nonce):
+    value = str(index) + str(previous_hash) + str(timestamp) + str(data) + str(nonce)
+    return hashlib.sha256(value.encode('utf-8')).hexdigest()
+
+def sync_with_supabase():
+    response = supabase.table("blocks").select("*").order("index").execute()
+    if not response.data:
+        # Create Genesis Block if DB is empty
+        genesis_block = {
+            "index": 0,
+            "previous_hash": "0",
+            "timestamp": time.time(),
+            "data": "Genesis Block - Welcome to HamiZex",
+            "nonce": 0
+        }
+        genesis_block["hash"] = hash_block(
+            genesis_block["index"], genesis_block["previous_hash"], 
+            genesis_block["timestamp"], genesis_block["data"], genesis_block["nonce"]
+        )
+        supabase.table("blocks").insert(genesis_block).execute()
+        return [genesis_block]
     return response.data
 
-# --- Add Block ---
 def add_block(data):
-    chain = get_blocks()
-    if len(chain) == 0:
-        index = 0
-        previous_hash = "0"
-    else:
-        last_block = chain[-1]
-        index = last_block['index'] + 1
-        previous_hash = last_block['hash']
-        
-    timestamp = str(time.time())
+    chain = sync_with_supabase()
+    last_block = chain[-1]
     
-    # Proof of Work (Mining) - Simple Version
+    new_index = last_block["index"] + 1
+    previous_hash = last_block["hash"]
+    timestamp = time.time()
+    
+    # Mining (Proof of Work Simulation)
     nonce = 0
-    with st.spinner("⚡ Processing HamiZex Transaction..."):
-        while True:
-            hash_string = str(index) + timestamp + data + previous_hash + str(nonce)
-            block_hash = hashlib.sha256(hash_string.encode()).hexdigest()
-            if block_hash.startswith("0000"):  # Difficulty
-                break
-            nonce += 1
+    difficulty = 4 # Requires 4 leading zeros
+    target = "0" * difficulty
+    
+    # UI Element to show mining progress
+    mining_placeholder = st.empty()
+    
+    while True:
+        new_hash = hash_block(new_index, previous_hash, timestamp, data, nonce)
+        
+        if nonce % 10000 == 0: # Update UI occasionally to avoid freezing
+            mining_placeholder.info(f"⛏️ Mining... Trying nonce: {nonce} | Hash: {new_hash[:15]}...")
             
+        if new_hash.startswith(target):
+            mining_placeholder.success(f"💎 Block Mined Successfully! Nonce found: {nonce}")
+            break
+        nonce += 1
+
     new_block = {
-        "index": index,
+        "index": new_index,
+        "previous_hash": previous_hash,
         "timestamp": timestamp,
         "data": data,
-        "previous_hash": previous_hash,
-        "hash": block_hash,
-        "nonce": nonce
+        "nonce": nonce,
+        "hash": new_hash
     }
     
+    # Save to Supabase
     supabase.table("blocks").insert(new_block).execute()
-    return new_block
 
-# --- UI Layout ---
-st.write("") # Spacer
-col1, col2, col3 = st.columns([1,2,1])
-with col2:
-    st.markdown('<div class="rotating-coin"></div>', unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center; margin-top: 20px;'>HamiZex ($HZX)</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #8b9bb4; font-size: 18px;'>The Decentralized Ledger by Hamidreza & Hami</p>", unsafe_allow_html=True)
+# --- UI LAYOUT ---
+st.markdown('<div class="main-title">🪙 HamiZex Blockchain</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">A Secure, Decentralized Ledger by Hamidreza ($HZX)</div>', unsafe_allow_html=True)
 
-# Main Interface
-st.write("---")
-
-col_data, col_chain = st.columns([1, 2])
-
-with col_data:
-    st.subheader("Initiate Transaction")
+# Transaction Input Form
+st.markdown("### 📝 Initiate Transaction")
+with st.container():
     data_input = st.text_area("Enter transaction details or smart contract message:", height=100)
-    
     if st.button("Cryptographically Sign & Mine ⛏️", use_container_width=True):
         if data_input:
             add_block(data_input)
-            st.success(f"Transaction verified and added to HamiZex!")
-            st.rerun()
+            st.rerun() # Refresh the app to show the new block
         else:
-            st.warning("Data payload cannot be empty.")
-            
-    st.write("")
-    st.metric(label="Network Difficulty Target", value="4 Leading Zeros")
-    st.metric(label="Consensus Protocol", value="Proof-of-Work (PoW)")
-    
-with col_chain:
-    st.subheader("Live Network Ledger")
-    blocks = get_blocks()
-    
-    if len(blocks) == 0:
-        st.info("The HamiZex ledger is currently empty. Initialize the genesis block!")
-    else:
-        # Display blocks beautifully using HTML
-        for block in reversed(blocks): # Show newest first
-            st.markdown(f"""
-            <div class="block-card">
-                <h4 style="color: white; margin-bottom: 5px;">📦 Block #{block['index']}</h4>
-                <p style="color: #00ffcc; font-size: 15px;"><b>Payload:</b> {block['data']}</p>
-                <div style="font-family: monospace; font-size: 13px; color: #8b9bb4; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px;">
-                    <div><b style="color: #f7931a;">Hash:</b> {block['hash']}</div>
-                    <div style="margin-top: 4px;"><b>Prev:</b> {block['previous_hash']}</div>
-                    <div style="margin-top: 4px;"><b>Nonce:</b> {block['nonce']}</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.warning("⚠️ Transaction data cannot be empty.")
+
+st.divider()
+
+# Display the Blockchain
+st.markdown("### ⛓️ Live Public Ledger")
+blockchain_data = sync_with_supabase()
+
+for block in reversed(blockchain_data):
+    st.markdown(f"""
+    <div class="block-card">
+        <div class="block-header">Block #{block['index']}</div>
+        <b>Timestamp:</b> {time.ctime(block['timestamp'])}<br><br>
+        <b>Transaction Data:</b><br>
+        <i>{block['data']}</i><br><br>
+        <b>Nonce:</b> <span class="hash-text">{block.get('nonce', 0)}</span><br>
+        <b>Previous Hash:</b> <br><span class="hash-text">{block['previous_hash']}</span><br>
+        <b>Block Hash:</b> <br><span class="hash-text">{block['hash']}</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+Run that SQL command in Supabase first, then update your GitHub file, and your error will disappear! Let me know when it works.
