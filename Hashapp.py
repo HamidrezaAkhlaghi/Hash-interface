@@ -6,7 +6,7 @@ import os
 from supabase import create_client, Client
 
 # --- SETUP & CONFIG ---
-st.set_page_config(page_title="Dr. Fluffy's ABDI Coin Emporium", page_icon="😸", layout="centered")
+st.set_page_config(page_title="ABDI Network", page_icon="🪙", layout="centered")
 
 # --- IMAGE ENCODING FOR UI ---
 def get_image_base64(image_path):
@@ -18,119 +18,139 @@ def get_image_base64(image_path):
 # Read the local image file verbatim
 coin_b64 = get_image_base64("OIP_2.webp")
 
-# --- HUMOROUS CSS UI DESIGN ---
+# --- MINIMALIST & BEAUTIFUL CSS ---
 page_bg_img = f"""
 <style>
-/* Import web fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Comic+Neue:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap');
 
-/* Main Background */
+/* Clean, dark background with subtle image integration */
 [data-testid="stAppViewContainer"] {{
-    background-color: #000000;
+    background-color: #050505;
     background-image: 
-        linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)),
+        linear-gradient(rgba(5, 5, 5, 0.85), rgba(5, 5, 5, 0.95)),
         url('data:image/webp;base64,{coin_b64}');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    color: #ffffff;
+    color: #ededed;
     font-family: 'Inter', sans-serif;
 }}
 
-/* Hide standard header */
+/* Hide standard header for a cleaner look */
 [data-testid="stHeader"] {{
     background: rgba(0,0,0,0);
 }}
 
-/* Centered Joke Container */
-.fluffy-container {{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+/* Elegant Typography */
+.main-title {{
+    font-family: 'Inter', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #ffffff;
     text-align: center;
-    margin-top: 5vh;
-    padding: 40px;
-    background: rgba(0, 0, 0, 0.5);
-    border: 2px dashed rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    backdrop-filter: blur(5px);
+    margin-bottom: 0.2rem;
 }}
 
-.title-text {{
+.sub-title {{
     font-family: 'Inter', sans-serif;
-    font-size: 2.5em;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 20px;
-    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.8);
-}}
-
-.body-text {{
-    font-family: 'Inter', sans-serif;
-    font-size: 1.2em;
-    line-height: 1.6;
-    margin-bottom: 20px;
-    max-width: 600px;
-}}
-
-.ufo-cat {{
-    font-size: 4em;
-    margin: 20px 0;
-    animation: floatCat 3s ease-in-out infinite;
-}}
-
-@keyframes floatCat {{
-    0%, 100% {{ transform: translateY(0px) rotate(-5deg); }}
-    50% {{ transform: translateY(-15px) rotate(5deg); }}
-}}
-
-.footer-text {{
-    font-size: 0.8em;
+    font-size: 1rem;
+    font-weight: 300;
     color: #a1a1aa;
-    margin-top: 40px;
-    font-family: 'Comic Neue', cursive;
+    text-align: center;
+    margin-bottom: 3rem;
+    letter-spacing: 0.5px;
 }}
 
-/* Streamlit Button Override (DONATE LINT & REGRET IT) */
-div.stButton > button {{
-    background-color: #ffffff !important;
-    color: #000000 !important;
-    font-family: 'Inter', sans-serif;
-    font-weight: 900;
-    font-size: 1.2em;
-    border: 2px solid #000000;
-    border-radius: 5px;
-    padding: 15px 30px;
+/* Sleek Glass Cards */
+.glass-card {{
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}}
+
+.glass-card:hover {{
+    transform: translateY(-2px);
+    border-color: rgba(212, 175, 55, 0.3);
+}}
+
+/* Ledger specific styles */
+.block-header {{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}}
+
+.block-id {{
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #d4af37;
+}}
+
+.block-time {{
+    font-size: 0.85rem;
+    color: #71717a;
+}}
+
+.data-label {{
+    font-size: 0.75rem;
     text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #71717a;
+    margin-bottom: 4px;
+    display: block;
+}}
+
+.mono-text {{
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+    color: #d4d4d8;
+    word-break: break-all;
+}}
+
+/* Input Area Restyling */
+.stTextArea textarea {{
+    background-color: rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #ededed !important;
+    font-family: 'Fira Code', monospace !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+}}
+
+.stTextArea textarea:focus {{
+    border-color: #d4af37 !important;
+    box-shadow: 0 0 0 1px #d4af37 !important;
+}}
+
+/* Button Restyling */
+div.stButton > button {{
+    background-color: #ffffff;
+    color: #000000 !important;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    border-radius: 12px;
+    border: none;
+    padding: 12px 24px;
     transition: all 0.2s ease;
-    box-shadow: 5px 5px 0px rgba(255,255,255,0.3);
 }}
 
 div.stButton > button:hover {{
-    transform: translate(2px, 2px);
-    box-shadow: 3px 3px 0px rgba(255,255,255,0.3);
-    background-color: #f0f0f0 !important;
-}}
-
-/* Block styling */
-.block-card {{
-    background: rgba(20, 20, 20, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 15px;
-    text-align: left;
-    font-family: monospace;
+    background-color: #d4af37;
+    color: #ffffff !important;
+    transform: scale(1.01);
 }}
 </style>
 """
 st.markdown(page_bg_img, unsafe_allow_html=True)
-
-# --- INITIALIZE FUNNY TOAST ---
-if "toast_shown" not in st.session_state:
-    st.toast("🫖 **Error 418: I'm a teapot**, and this background is too serious for this webpage content.", icon="⚠️")
-    st.session_state.toast_shown = True
 
 # --- SUPABASE CONNECTION ---
 @st.cache_resource
@@ -153,7 +173,7 @@ def sync_with_supabase():
             "index": 0,
             "previous_hash": "0",
             "timestamp": time.time(),
-            "data": "Genesis Block - Dr. Fluffy Initialized ABDI Coin",
+            "data": "Network Genesis",
             "nonce": 0
         }
         genesis_block["hash"] = hash_block(
@@ -173,7 +193,7 @@ def add_block(data):
     timestamp = time.time()
     
     nonce = 0
-    difficulty = 3 # Lowered slightly so you don't wait forever while laughing
+    difficulty = 4 
     target = "0" * difficulty
     
     mining_placeholder = st.empty()
@@ -181,11 +201,12 @@ def add_block(data):
     while True:
         new_hash = hash_block(new_index, previous_hash, timestamp, data, nonce)
         
-        if nonce % 5000 == 0:
-            mining_placeholder.info(f"🛸 Abducting hashes... Nonce: `{nonce}`")
+        if nonce % 8000 == 0:
+            mining_placeholder.info(f"Computing Hash... Nonce: {nonce}")
             
         if new_hash.startswith(target):
-            mining_placeholder.success(f"😸 Success! ABDI Block Mined. Nonce: `{nonce}`")
+            mining_placeholder.success("Block successfully verified and appended.")
+            time.sleep(1) # Brief pause so the user sees the success message
             break
         nonce += 1
 
@@ -201,51 +222,54 @@ def add_block(data):
     supabase.table("blocks").insert(new_block).execute()
 
 # --- UI LAYOUT ---
-st.markdown("""
-<div class="fluffy-container">
-    <div class="title-text">DR. FLUFFY'S GALACTIC ABDI COIN EMPORIUM</div>
-    <div class="ufo-cat">🛸😸</div>
-    <div class="body-text">
-        Welcome to our page. I thought the background source code was in a repo named <b>"serious_crypto_v4"</b> 
-        but it was actually in <b>"broken_lint_collect_v1"</b>.<br><br>
-        Our frontend dev is still learning CSS.
-    </div>
-    <div class="body-text" style="font-weight: bold;">
-        Current Inventory: zero toe lint.<br>
-        But we have ABDI COIN and this BACKGROUND.
-    </div>
-</div>
-""", unsafe_allow_html=True)
+st.markdown('<div class="main-title">ABDI COIN</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">A Secure, Minimalist Decentralized Ledger</div>', unsafe_allow_html=True)
 
-st.write("") # Spacer
+# Transaction Entry
+with st.container():
+    st.markdown('<span class="data-label">New Transaction Payload</span>', unsafe_allow_html=True)
+    data_input = st.text_area("Payload", height=100, label_visibility="collapsed", placeholder="Enter smart contract data or transfer details...")
+    
+    if st.button("Sign & Append Block", use_container_width=True):
+        if data_input.strip():
+            add_block(data_input)
+            st.rerun() 
+        else:
+            st.warning("Payload cannot be empty.")
 
-# Transaction Input Form
-data_input = st.text_input("Enter ABDI Transaction Data:", placeholder="I traded 5 toe lints for 1 ABDI Coin...")
-if st.button("DONATE LINT & REGRET IT.", use_container_width=True):
-    if data_input:
-        add_block(data_input)
-        st.toast("Block successfully deployed to the lint network!", icon="🚀")
-        time.sleep(1)
-        st.rerun() 
-    else:
-        st.warning("⚠️ You must enter some data before regretting it.")
+st.markdown("<br><br>", unsafe_allow_html=True)
+st.markdown('<span class="data-label" style="font-size: 0.9rem;">Network Ledger History</span>', unsafe_allow_html=True)
 
-st.divider()
-
-# Display the Blockchain
-st.markdown("<h3 style='text-align: center;'>ABDI Network Ledger</h3>", unsafe_allow_html=True)
+# Ledger Rendering
 blockchain_data = sync_with_supabase()
 
 for block in reversed(blockchain_data):
     st.markdown(f"""
-    <div class="block-card">
-        <b style="color:#fde047;">Block #{block['index']}</b> | <i>{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(block['timestamp']))}</i><br><br>
-        <b>Payload:</b> {block['data']}<br><br>
-        <b>Nonce:</b> {block.get('nonce', 0)}<br>
-        <b>Prev Hash:</b> {block['previous_hash']}<br>
-        <b style="color:#38bdf8;">Hash:</b> {block['hash']}
+    <div class="glass-card">
+        <div class="block-header">
+            <span class="block-id">Block {block['index']}</span>
+            <span class="block-time">{time.strftime('%b %d, %Y • %H:%M:%S', time.localtime(block['timestamp']))}</span>
+        </div>
+        
+        <div style="margin-bottom: 16px;">
+            <span class="data-label">Payload</span>
+            <span class="mono-text" style="color: #ffffff;">{block['data']}</span>
+        </div>
+        
+        <div style="display: flex; gap: 40px; margin-bottom: 16px;">
+            <div>
+                <span class="data-label">Nonce</span>
+                <span class="mono-text">{block.get('nonce', 0)}</span>
+            </div>
+            <div style="flex-grow: 1;">
+                <span class="data-label">Previous Hash</span>
+                <span class="mono-text">{block['previous_hash']}</span>
+            </div>
+        </div>
+        
+        <div>
+            <span class="data-label">Block Hash</span>
+            <span class="mono-text" style="color: #d4af37;">{block['hash']}</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
-
-# Footer
-st.markdown("<div class='footer-text' style='text-align: center;'>© 2026 Toe-Lint Corp. Built on hope and a broken npm install.</div>", unsafe_allow_html=True)
