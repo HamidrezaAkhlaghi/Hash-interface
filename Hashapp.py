@@ -188,4 +188,4 @@ for block in reversed(blockchain_data):
     </div>
     """, unsafe_allow_html=True)
 
-Run that SQL command in Supabase first, then update your GitHub file, and your error will disappear! Let me know when it works.
+
