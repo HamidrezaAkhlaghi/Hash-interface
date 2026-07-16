@@ -1,154 +1,251 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import hashlib
-import base64
 import time
+import base64
 import os
+from supabase import create_client, Client
 
-# ==========================================================
-#  ⚙️ LOGIC — (your technical stuff, unchanged)
-# ==========================================================
-class Block:
-    def __init__(self, index, timestamp, data, previous_hash):
-        self.index = index
-        self.timestamp = timestamp
-        self.data = data
-        self.previous_hash = previous_hash
-        self.hash = self.calculate_hash()
+# --- SETUP & CONFIG ---
+st.set_page_config(page_title="Dr. Fluffy's ABDI Coin Emporium", page_icon="😸", layout="centered")
 
-    def calculate_hash(self):
-        content = f"{self.index}{self.timestamp}{self.data}{self.previous_hash}"
-        return hashlib.sha256(content.encode()).hexdigest()
-
-class Blockchain:
-    def __init__(self):
-        self.chain = [self.create_genesis_block()]
-
-    def create_genesis_block(self):
-        return Block(0, time.time(), "Genesis Block", "0")
-
-    def get_latest_block(self):
-        return self.chain[-1]
-
-    def add_block(self, data):
-        prev = self.get_latest_block()
-        new_block = Block(prev.index + 1, time.time(), data, prev.hash)
-        self.chain.append(new_block)
-
-    def is_chain_valid(self):
-        for i in range(1, len(self.chain)):
-            cur, prev = self.chain[i], self.chain[i - 1]
-            if cur.hash != cur.calculate_hash():
-                return False
-            if cur.previous_hash != prev.hash:
-                return False
-        return True
-
-# ==========================================================
-#  🎨 UI — SEXY MODE
-# ==========================================================
-st.set_page_config(page_title="₿ MY BLOCKCHAIN", page_icon="🪙", layout="wide")
-
-def get_image_base64(path):
-    if os.path.exists(path):
-        with open(path, "rb") as f:
-            return base64.b64encode(f.read()).decode()
+# --- IMAGE ENCODING FOR UI ---
+def get_image_base64(image_path):
+    if os.path.exists(image_path):
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode()
     return ""
 
-coin_b64 = get_image_base64("OIP.webp")   # <-- your image
+# Read the local image file verbatim
+coin_b64 = get_image_base64("OIP_2.webp")
 
-st.markdown(f"""
+# --- HUMOROUS CSS UI DESIGN ---
+page_bg_img = f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+/* Import web fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Comic+Neue:wght@700&display=swap');
 
-/* ============ CINEMATIC BACKGROUND (OIP.webp) ============ */
+/* Main Background */
 [data-testid="stAppViewContainer"] {{
-    background-color: #060a14;
-    background-image:
-        radial-gradient(ellipse at center, rgba(6,10,20,0.40) 0%, rgba(6,10,20,0.93) 80%),
-        radial-gradient(circle at 78% 22%, rgba(212,160,60,0.10), transparent 45%),
-        radial-gradient(circle at 18% 82%, rgba(60,110,220,0.09), transparent 50%),
+    background-color: #000000;
+    background-image: 
+        linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)),
         url('data:image/webp;base64,{coin_b64}');
-    background-size: cover, cover, cover, cover;
+    background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    color: #e4e4e7;
+    color: #ffffff;
     font-family: 'Inter', sans-serif;
 }}
 
-/* golden particle drift */
-[data-testid="stAppViewContainer"]::before {{
-    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    background-image:
-        radial-gradient(2px 2px at 20% 30%, rgba(253,224,71,0.55), transparent),
-        radial-gradient(1.5px 1.5px at 70% 60%, rgba(212,175,55,0.45), transparent),
-        radial-gradient(2px 2px at 45% 85%, rgba(120,170,255,0.35), transparent),
-        radial-gradient(1px 1px at 85% 15%, rgba(253,224,71,0.5), transparent);
-    background-size: 200% 200%;
-    animation: drift 22s linear infinite;
-}}
-@keyframes drift {{ 0% {{background-position: 0% 0%;}} 100% {{background-position: 200% 200%;}} }}
-
-[data-testid="stHeader"] {{ background: rgba(0,0,0,0); }}
-
-/* ============ FLOATING 3D COIN (mouse parallax via JS) ============ */
-.coin-wrapper {{
-    position: fixed; top: 45px; right: 55px;
-    width: 150px; height: 150px; z-index: 999;
-    perspective: 1200px;
-    animation: floatCoin 4s ease-in-out infinite;
-    filter: drop-shadow(0 0 35px rgba(212,175,55,0.35));
-    transition: transform 0.15s ease-out;
-}}
-.coin-3d {{
-    width: 100%; height: 100%; border-radius: 50%;
-    background-image: url('data:image/webp;base64,{coin_b64}');
-    background-size: cover; background-position: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.9), 0 0 30px rgba(212,175,55,0.35),
-                inset 0 0 25px rgba(255,215,120,0.15);
-    animation: spinCoin 15s linear infinite;
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.25,0.8,0.25,1);
-}}
-.coin-3d:hover {{
-    animation: spinCoin 1.2s linear infinite;
-    box-shadow: 0 0 70px rgba(253,224,71,0.7), inset 0 0 35px rgba(255,255,255,0.25);
-    transform: scale(1.12);
-}}
-@keyframes spinCoin  {{ 0% {{transform: rotateY(0);}} 100% {{transform: rotateY(360deg);}} }}
-@keyframes floatCoin {{ 0%,100% {{transform: translateY(0);}} 50% {{transform: translateY(-14px);}} }}
-
-/* ============ MOUSE-DRIVEN GEARS ============ */
-.gear {{
-    position: fixed; z-index: 0; pointer-events: none;
-    color: rgba(212,175,55,0.30);
-    text-shadow: 0 0 25px rgba(212,175,55,0.35);
-    transition: transform 0.1s linear;
-    user-select: none;
-}}
-#gear1 {{ top: 12%;  left: 3%;  font-size: 130px; }}
-#gear2 {{ top: 55%;  left: 8%;  font-size: 75px; color: rgba(120,170,255,0.25); }}
-#gear3 {{ bottom: 8%; right: 6%; font-size: 100px; }}
-#gear4 {{ top: 30%;  right: 18%; font-size: 55px; color: rgba(253,224,71,0.22); }}
-
-/* ============ TYPOGRAPHY ============ */
-.main-title {{
-    text-align: center; font-size: 4.2em; font-weight: 800; letter-spacing: -1px;
-    margin-bottom: 5px;
-    background: linear-gradient(90deg, #b8860b, #fde047, #ffffff, #fde047, #b8860b);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-size: 300% auto;
-    animation: shimmer 4s infinite linear;
-}}
-@keyframes shimmer {{ to {{ background-position: 300% center; }} }}
-.sub-title {{
-    color: #8b9cc4; text-align: center; margin-bottom: 45px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 1em; letter-spacing: 3px; text-transform: uppercase;
+/* Hide standard header */
+[data-testid="stHeader"] {{
+    background: rgba(0,0,0,0);
 }}
 
-/* ============ GLASS BLOCK CARDS ============ */
+/* Centered Joke Container */
+.fluffy-container {{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: 5vh;
+    padding: 40px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    backdrop-filter: blur(5px);
+}}
+
+.title-text {{
+    font-family: 'Inter', sans-serif;
+    font-size: 2.5em;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.8);
+}}
+
+.body-text {{
+    font-family: 'Inter', sans-serif;
+    font-size: 1.2em;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    max-width: 600px;
+}}
+
+.ufo-cat {{
+    font-size: 4em;
+    margin: 20px 0;
+    animation: floatCat 3s ease-in-out infinite;
+}}
+
+@keyframes floatCat {{
+    0%, 100% {{ transform: translateY(0px) rotate(-5deg); }}
+    50% {{ transform: translateY(-15px) rotate(5deg); }}
+}}
+
+.footer-text {{
+    font-size: 0.8em;
+    color: #a1a1aa;
+    margin-top: 40px;
+    font-family: 'Comic Neue', cursive;
+}}
+
+/* Streamlit Button Override (DONATE LINT & REGRET IT) */
+div.stButton > button {{
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 1.2em;
+    border: 2px solid #000000;
+    border-radius: 5px;
+    padding: 15px 30px;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+    box-shadow: 5px 5px 0px rgba(255,255,255,0.3);
+}}
+
+div.stButton > button:hover {{
+    transform: translate(2px, 2px);
+    box-shadow: 3px 3px 0px rgba(255,255,255,0.3);
+    background-color: #f0f0f0 !important;
+}}
+
+/* Block styling */
 .block-card {{
-    position: relative;
-    background: linear-gradient(160deg, rgba(13,20,38,0.72), rgba(8,12,24,0.85));
-    border: 1px solid rgba(212
+    background: rgba(20, 20, 20, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 15px;
+    text-align: left;
+    font-family: monospace;
+}}
+</style>
+"""
+st.markdown(page_bg_img, unsafe_allow_html=True)
+
+# --- INITIALIZE FUNNY TOAST ---
+if "toast_shown" not in st.session_state:
+    st.toast("🫖 **Error 418: I'm a teapot**, and this background is too serious for this webpage content.", icon="⚠️")
+    st.session_state.toast_shown = True
+
+# --- SUPABASE CONNECTION ---
+@st.cache_resource
+def init_connection():
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
+    return create_client(url, key)
+
+supabase: Client = init_connection()
+
+# --- BLOCKCHAIN FUNCTIONS ---
+def hash_block(index, previous_hash, timestamp, data, nonce):
+    value = str(index) + str(previous_hash) + str(timestamp) + str(data) + str(nonce)
+    return hashlib.sha256(value.encode('utf-8')).hexdigest()
+
+def sync_with_supabase():
+    response = supabase.table("blocks").select("*").order("index").execute()
+    if not response.data:
+        genesis_block = {
+            "index": 0,
+            "previous_hash": "0",
+            "timestamp": time.time(),
+            "data": "Genesis Block - Dr. Fluffy Initialized ABDI Coin",
+            "nonce": 0
+        }
+        genesis_block["hash"] = hash_block(
+            genesis_block["index"], genesis_block["previous_hash"], 
+            genesis_block["timestamp"], genesis_block["data"], genesis_block["nonce"]
+        )
+        supabase.table("blocks").insert(genesis_block).execute()
+        return [genesis_block]
+    return response.data
+
+def add_block(data):
+    chain = sync_with_supabase()
+    last_block = chain[-1]
+    
+    new_index = last_block["index"] + 1
+    previous_hash = last_block["hash"]
+    timestamp = time.time()
+    
+    nonce = 0
+    difficulty = 3 # Lowered slightly so you don't wait forever while laughing
+    target = "0" * difficulty
+    
+    mining_placeholder = st.empty()
+    
+    while True:
+        new_hash = hash_block(new_index, previous_hash, timestamp, data, nonce)
+        
+        if nonce % 5000 == 0:
+            mining_placeholder.info(f"🛸 Abducting hashes... Nonce: `{nonce}`")
+            
+        if new_hash.startswith(target):
+            mining_placeholder.success(f"😸 Success! ABDI Block Mined. Nonce: `{nonce}`")
+            break
+        nonce += 1
+
+    new_block = {
+        "index": new_index,
+        "previous_hash": previous_hash,
+        "timestamp": timestamp,
+        "data": data,
+        "nonce": nonce,
+        "hash": new_hash
+    }
+    
+    supabase.table("blocks").insert(new_block).execute()
+
+# --- UI LAYOUT ---
+st.markdown("""
+<div class="fluffy-container">
+    <div class="title-text">DR. FLUFFY'S GALACTIC ABDI COIN EMPORIUM</div>
+    <div class="ufo-cat">🛸😸</div>
+    <div class="body-text">
+        Welcome to our page. I thought the background source code was in a repo named <b>"serious_crypto_v4"</b> 
+        but it was actually in <b>"broken_lint_collect_v1"</b>.<br><br>
+        Our frontend dev is still learning CSS.
+    </div>
+    <div class="body-text" style="font-weight: bold;">
+        Current Inventory: zero toe lint.<br>
+        But we have ABDI COIN and this BACKGROUND.
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+st.write("") # Spacer
+
+# Transaction Input Form
+data_input = st.text_input("Enter ABDI Transaction Data:", placeholder="I traded 5 toe lints for 1 ABDI Coin...")
+if st.button("DONATE LINT & REGRET IT.", use_container_width=True):
+    if data_input:
+        add_block(data_input)
+        st.toast("Block successfully deployed to the lint network!", icon="🚀")
+        time.sleep(1)
+        st.rerun() 
+    else:
+        st.warning("⚠️ You must enter some data before regretting it.")
+
+st.divider()
+
+# Display the Blockchain
+st.markdown("<h3 style='text-align: center;'>ABDI Network Ledger</h3>", unsafe_allow_html=True)
+blockchain_data = sync_with_supabase()
+
+for block in reversed(blockchain_data):
+    st.markdown(f"""
+    <div class="block-card">
+        <b style="color:#fde047;">Block #{block['index']}</b> | <i>{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(block['timestamp']))}</i><br><br>
+        <b>Payload:</b> {block['data']}<br><br>
+        <b>Nonce:</b> {block.get('nonce', 0)}<br>
+        <b>Prev Hash:</b> {block['previous_hash']}<br>
+        <b style="color:#38bdf8;">Hash:</b> {block['hash']}
+    </div>
+    """, unsafe_allow_html=True)
+
+# Footer
+st.markdown("<div class='footer-text' style='text-align: center;'>© 2026 Toe-Lint Corp. Built on hope and a broken npm install.</div>", unsafe_allow_html=True)
